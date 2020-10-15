@@ -2,6 +2,8 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"reflect"
@@ -35,6 +37,36 @@ type RouteRequest struct {
 	Destination []Destination `json:"dst"`
 }
 
+// OSRMRoute struct
+type OSRMRoute struct {
+	Legs       []map[string]interface{} `json:"legs"`
+	WeightName string                   `json:"weight_name"`
+	Distance   float64                  `json:"distance"`
+	Duration   float64                  `json:"duration"`
+}
+
+// OSRMResponse sturct
+type OSRMResponse struct {
+	Code      string                   `json:"code"`
+	Waypoints []map[string]interface{} `json:"waypoints"`
+	Routes    []OSRMRoute              `json:"routes"`
+}
+
+// ---------------
+
+// Route struct
+type Route struct {
+	Destination string  `json:"destination"`
+	Duration    float64 `json:"duration"`
+	Distance    float64 `json:"distance"`
+}
+
+// OutputResponse struct
+type OutputResponse struct {
+	Source string  `json:"source"`
+	Routes []Route `json:"routes"`
+}
+
 func printHello(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -52,6 +84,8 @@ func printHello(w http.ResponseWriter, r *http.Request) {
 
 func getRoutes(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+
+	const responseCodeOK = "Ok"
 
 	response := Response{
 		Code: http.StatusOK,
@@ -230,8 +264,66 @@ func getRoutes(w http.ResponseWriter, r *http.Request) {
 		Destination: destinationSlice,
 	}
 
+	log.Printf("%v", routeRequest)
+
+	// Validated src and dst
+	sourceString := fmt.Sprintf("%g,%g", source.Latitude, source.Longitude)
+	log.Println("source:", sourceString)
+
+	destinationString := strings.Join(dstParams, ";")
+	log.Println("destination:", destinationString)
+
+	// w.WriteHeader(http.StatusOK)
+	// json.NewEncoder(w).Encode(routeRequest)
+
+	// Send request
+	osrmURL := fmt.Sprintf("http://router.project-osrm.org/route/v1/driving/%s;%s?overview=false", sourceString, destinationString)
+
+	resp, err := http.Get(osrmURL)
+	if err != nil {
+		response.Body = "Cannot send request to OSRM"
+		response.Code = http.StatusBadRequest
+		log.Printf("osrmURL: ", osrmURL)
+		log.Printf("Error: ", err)
+
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		response.Body = "Cannot read the response Body from OSRM"
+		response.Code = http.StatusBadRequest
+		log.Printf("osrmURL: ", osrmURL)
+		log.Printf("Error: ", err)
+
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	log.Println("Response Body \n")
+	// log.Println(string(body))
+
+	osrmResp := OSRMResponse{}
+	err = json.Unmarshal(body, &osrmResp)
+
+	if err != nil || osrmResp.Code != responseCodeOK {
+		response.Body = "Cannot UNMARSHAL the response Body from OSRM or Code Response is not Ok"
+		response.Code = http.StatusBadRequest
+		log.Printf("osrmURL: ", osrmURL)
+		log.Printf("Error: ", err)
+
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	//  Ouput the umarshaled json
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(routeRequest)
+	json.NewEncoder(w).Encode(osrmResp)
 }
 
 func main() {
