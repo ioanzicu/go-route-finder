@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"reflect"
+	"strconv"
 	"strings"
 
 	mux "github.com/gorilla/mux"
@@ -13,6 +15,24 @@ import (
 type Response struct {
 	Code int         `json:"code"`
 	Body interface{} `json:"body"`
+}
+
+// Source struct - Home Address
+type Source struct {
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
+}
+
+// Destination struct - Destination Address
+type Destination struct {
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
+}
+
+// RouteRequest struct for user input
+type RouteRequest struct {
+	Source      Source        `json:"src"`
+	Destination []Destination `json:"dst"`
 }
 
 func printHello(w http.ResponseWriter, r *http.Request) {
@@ -76,12 +96,68 @@ func getRoutes(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Println(srcParams[0], (reflect.TypeOf(srcParams[0])))
+
 	srcParams = strings.Split(srcParams[0], ",")
+
+	// Make sure that 'src' has latitude and longitude provided
+	if len(srcParams) != 2 {
+		message := "Expect 'src' to have lattitude and longitude"
+
+		log.Println(message)
+		response.Code = http.StatusBadRequest
+		response.Body = message
+
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
 	srcParamsString := strings.Join(srcParams, ", ")
 	response.Body = "Request Params: " + srcParamsString
 
+	log.Println("latitude", srcParams[0], "longitude", srcParams[1],
+		(reflect.TypeOf(srcParams[0])))
+
+	tempSrcLatitude := srcParams[0]
+	tempSrcLongitude := srcParams[1]
+
+	log.Println("LOG", tempSrcLatitude, tempSrcLongitude)
+
+	srcLatitude := 0.0
+
+	if lat, err := strconv.ParseFloat(tempSrcLatitude, 64); err == nil {
+		srcLatitude = lat
+		log.Println("Lat: ", lat)
+	} else {
+		response.Body = "Malformated param type (float64)"
+
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	srcLongitude := 0.0
+
+	if lon, err := strconv.ParseFloat(tempSrcLongitude, 64); err == nil {
+		srcLongitude = lon
+
+		log.Println("Long: ", lon)
+	} else {
+		response.Body = "Malformated param type (float64)"
+
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	source := Source{
+		Latitude:  srcLatitude,
+		Longitude: srcLongitude,
+	}
+
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response)
+	json.NewEncoder(w).Encode(source)
 }
 
 func main() {
