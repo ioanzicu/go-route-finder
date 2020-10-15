@@ -82,6 +82,37 @@ func printHello(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func doHTTPRequest(URL string, w http.ResponseWriter) ([]byte, error) {
+	response := Response{}
+
+	resp, err := http.Get(URL)
+	if err != nil {
+		response.Body = "Cannot send request to OSRM"
+		response.Code = http.StatusBadRequest
+		log.Println("osrmURL: ", URL)
+		log.Println("Error: ", err)
+
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(response)
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		response.Body = "Cannot read the response Body from OSRM"
+		response.Code = http.StatusBadRequest
+		log.Println("osrmURL: ", URL)
+		log.Println("Error: ", err)
+
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(response)
+		return nil, err
+	}
+
+	return body, nil
+}
+
 func getRoutes(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -279,42 +310,22 @@ func getRoutes(w http.ResponseWriter, r *http.Request) {
 	// Send request
 	osrmURL := fmt.Sprintf("http://router.project-osrm.org/route/v1/driving/%s;%s?overview=false", sourceString, destinationString)
 
-	resp, err := http.Get(osrmURL)
+	reqBody, err := doHTTPRequest(osrmURL, w)
 	if err != nil {
-		response.Body = "Cannot send request to OSRM"
-		response.Code = http.StatusBadRequest
-		log.Printf("osrmURL: ", osrmURL)
-		log.Printf("Error: ", err)
-
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(response)
-		return
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		response.Body = "Cannot read the response Body from OSRM"
-		response.Code = http.StatusBadRequest
-		log.Printf("osrmURL: ", osrmURL)
-		log.Printf("Error: ", err)
-
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(response)
 		return
 	}
 
-	log.Println("Response Body \n")
+	log.Println("Response Body")
 	// log.Println(string(body))
 
 	osrmResp := OSRMResponse{}
-	err = json.Unmarshal(body, &osrmResp)
+	err = json.Unmarshal(reqBody, &osrmResp)
 
 	if err != nil || osrmResp.Code != responseCodeOK {
 		response.Body = "Cannot UNMARSHAL the response Body from OSRM or Code Response is not Ok"
 		response.Code = http.StatusBadRequest
-		log.Printf("osrmURL: ", osrmURL)
-		log.Printf("Error: ", err)
+		log.Println("osrmURL: ", osrmURL)
+		log.Println("Error: ", err)
 
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(response)
