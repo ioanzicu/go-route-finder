@@ -48,13 +48,13 @@ func GetRoutes(w http.ResponseWriter, r *http.Request) {
 
 	// Accept just the input that consist of 'src' and 'dst' params
 	if (!srcOK || len(srcParams[0]) < 1) || (!dstOK || len(dstParams[0]) < 1) {
-		utils.WriteErrorResponse("Missing required query parameters: src and dst", w)
+		utils.WriteErrorResponse("Missing required query parameters: src and/or dst", w)
 		return
 	}
 
 	// Check just for ONE 'src' query param
 	if len(srcParams) > 1 {
-		utils.WriteErrorResponse("Just one src param is allowed", w)
+		utils.WriteErrorResponse("Just one `src` param is allowed", w)
 		return
 	}
 
@@ -89,8 +89,6 @@ func GetRoutes(w http.ResponseWriter, r *http.Request) {
 	var destinationSlice []views.Destination
 
 	for _, destination := range dstParams {
-		// log.Println("Destination: ", index, " ", destination, len(destination))
-
 		arrDestination := strings.Split(destination, ",")
 
 		// Make sure that 'dst' has latitude and longitude provided

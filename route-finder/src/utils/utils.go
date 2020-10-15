@@ -12,30 +12,22 @@ import (
 
 // DoHTTPRequest perform a GET HTTP request on the given URL
 func DoHTTPRequest(URL string, w http.ResponseWriter) ([]byte, error) {
-	response := views.Response{}
-
 	resp, err := http.Get(URL)
 	if err != nil {
-		response.Body = "Cannot send request to OSRM"
-		response.Code = http.StatusBadRequest
 		log.Println("osrmURL: ", URL)
 		log.Println("Error: ", err)
 
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(response)
+		WriteErrorResponse("Cannot send request to OSRM", w)
 		return nil, err
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		response.Body = "Cannot read the response Body from OSRM"
-		response.Code = http.StatusBadRequest
 		log.Println("osrmURL: ", URL)
 		log.Println("Error: ", err)
 
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(response)
+		WriteErrorResponse("Cannot read the response Body from OSRM", w)
 		return nil, err
 	}
 
