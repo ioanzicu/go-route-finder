@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -111,6 +112,27 @@ func doHTTPRequest(URL string, w http.ResponseWriter) ([]byte, error) {
 	}
 
 	return body, nil
+}
+
+func sortSlice(slice []Route) []Route {
+	equalDistance := false
+
+	// Sort by driving time
+	sort.Slice(slice, func(i, j int) bool {
+		if slice[i].Duration == slice[j].Duration {
+			equalDistance = true
+		}
+		return slice[i].Duration < slice[j].Duration
+	})
+
+	// Sort by distance (if driving time is equal)
+	if equalDistance {
+		sort.Slice(slice, func(i, j int) bool {
+			return slice[i].Distance < slice[j].Distance
+		})
+	}
+
+	return slice
 }
 
 func getRoutes(w http.ResponseWriter, r *http.Request) {
@@ -336,6 +358,9 @@ func getRoutes(w http.ResponseWriter, r *http.Request) {
 			Distance:    osrmResp.Routes[0].Distance,
 		})
 	}
+
+	// Sort the routes
+	routes = sortSlice(routes)
 
 	outResp := OutputResponse{
 		Source: sourceString,
