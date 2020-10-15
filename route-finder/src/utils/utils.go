@@ -7,8 +7,10 @@ import (
 	"log"
 	"net/http"
 	"sort"
+	"strconv"
 )
 
+// DoHTTPRequest perform a GET HTTP request on the given URL
 func DoHTTPRequest(URL string, w http.ResponseWriter) ([]byte, error) {
 	response := views.Response{}
 
@@ -40,6 +42,9 @@ func DoHTTPRequest(URL string, w http.ResponseWriter) ([]byte, error) {
 	return body, nil
 }
 
+// SortSlice sort the parameter slice by Duration field
+// If There are some Duration fields equal, then, the
+// slice will be also sorted by the Distance field
 func SortSlice(slice []views.Route) []views.Route {
 	equalDistance := false
 
@@ -59,4 +64,35 @@ func SortSlice(slice []views.Route) []views.Route {
 	}
 
 	return slice
+}
+
+// ParseToFloat64 parse the string parameter to float64
+func ParseToFloat64(strNumber string, w http.ResponseWriter) (float64, error) {
+	srcLatitude := 0.0
+	response := views.Response{}
+
+	if lat, err := strconv.ParseFloat(strNumber, 64); err == nil {
+		srcLatitude = lat
+	} else {
+		response.Code = http.StatusBadRequest
+		response.Body = "Malformated param type (float64)"
+
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(response)
+		return 0.0, err
+	}
+
+	return srcLatitude, nil
+}
+
+// WriteErrorResponse send to the client a JSON object
+// with the Status Code and Error Message
+func WriteErrorResponse(message string, w http.ResponseWriter) {
+	response := views.Response{}
+
+	response.Code = http.StatusBadRequest
+	response.Body = message
+
+	w.WriteHeader(http.StatusBadRequest)
+	json.NewEncoder(w).Encode(response)
 }

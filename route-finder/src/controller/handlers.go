@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
 	"strings"
 
 	utils "github.com/route-finder/ioan/routes/utils"
@@ -36,11 +35,6 @@ func GetRoutes(w http.ResponseWriter, r *http.Request) {
 
 	const responseCodeOK = "Ok"
 
-	response := views.Response{
-		Code: http.StatusOK,
-		Body: "Soon, here will be (an) EPIC ROUTE/S!",
-	}
-
 	// We save to parse params:
 	// src - one  				example: src=13.388860,52.517037
 	// dst - one or many		example: dst=13.397634,52.529407&dst=13.428555,52.523219
@@ -54,25 +48,13 @@ func GetRoutes(w http.ResponseWriter, r *http.Request) {
 
 	// Accept just the input that consist of 'src' and 'dst' params
 	if (!srcOK || len(srcParams[0]) < 1) || (!dstOK || len(dstParams[0]) < 1) {
-		message := "Missing required query parameters: src and dst"
-
-		response.Code = http.StatusBadRequest
-		response.Body = message
-
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(response)
+		utils.WriteErrorResponse("Missing required query parameters: src and dst", w)
 		return
 	}
 
 	// Check just for ONE 'src' query param
 	if len(srcParams) > 1 {
-		message := "Just one src param is allowed"
-
-		response.Code = http.StatusBadRequest
-		response.Body = message
-
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(response)
+		utils.WriteErrorResponse("Just one src param is allowed", w)
 		return
 	}
 
@@ -80,46 +62,21 @@ func GetRoutes(w http.ResponseWriter, r *http.Request) {
 
 	// Make sure that 'src' has latitude and longitude provided
 	if len(srcParams) != 2 {
-		message := "Expect 'src' to have lattitude and longitude"
-
-		response.Code = http.StatusBadRequest
-		response.Body = message
-
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(response)
+		utils.WriteErrorResponse("Expect 'src' to have lattitude and longitude", w)
 		return
 	}
 
 	// Source
-	srcParamsString := strings.Join(srcParams, ", ")
-	response.Body = "Request Params: " + srcParamsString
-
 	tempSrcLatitude := srcParams[0]
 	tempSrcLongitude := srcParams[1]
 
-	srcLatitude := 0.0
-
-	if lat, err := strconv.ParseFloat(tempSrcLatitude, 64); err == nil {
-		srcLatitude = lat
-	} else {
-		response.Code = http.StatusBadRequest
-		response.Body = "Malformated param type (float64)"
-
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(response)
+	srcLatitude, err := utils.ParseToFloat64(tempSrcLatitude, w)
+	if err != nil {
 		return
 	}
 
-	srcLongitude := 0.0
-
-	if long, err := strconv.ParseFloat(tempSrcLongitude, 64); err == nil {
-		srcLongitude = long
-	} else {
-		response.Code = http.StatusBadRequest
-		response.Body = "Malformated param type (float64)"
-
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(response)
+	srcLongitude, err := utils.ParseToFloat64(tempSrcLongitude, w)
+	if err != nil {
 		return
 	}
 
@@ -129,9 +86,6 @@ func GetRoutes(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Destination
-	dstLatitude := 0.0
-	dstLongitude := 0.0
-
 	var destinationSlice []views.Destination
 
 	for _, destination := range dstParams {
@@ -141,38 +95,20 @@ func GetRoutes(w http.ResponseWriter, r *http.Request) {
 
 		// Make sure that 'dst' has latitude and longitude provided
 		if len(arrDestination) != 2 {
-			message := "Expect 'dst' to have lattitude and longitude"
-
-			response.Code = http.StatusBadRequest
-			response.Body = message
-
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(response)
+			utils.WriteErrorResponse("Expect 'dst' to have lattitude and longitude", w)
 			return
 		}
 
-		tempSrcLatitude := arrDestination[0]
-		tempSrcLongitude := arrDestination[1]
+		tempDstLatitude := arrDestination[0]
+		tempDstLongitude := arrDestination[1]
 
-		if lat, err := strconv.ParseFloat(tempSrcLatitude, 64); err == nil {
-			dstLatitude = lat
-		} else {
-			response.Body = "Malformated param type (float64)"
-			response.Code = http.StatusBadRequest
-
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(response)
+		dstLatitude, err := utils.ParseToFloat64(tempDstLatitude, w)
+		if err != nil {
 			return
 		}
 
-		if long, err := strconv.ParseFloat(tempSrcLongitude, 64); err == nil {
-			dstLongitude = long
-		} else {
-			response.Body = "Malformated param type (float64)"
-			response.Code = http.StatusBadRequest
-
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(response)
+		dstLongitude, err := utils.ParseToFloat64(tempDstLongitude, w)
+		if err != nil {
 			return
 		}
 
@@ -209,13 +145,7 @@ func GetRoutes(w http.ResponseWriter, r *http.Request) {
 		err = json.Unmarshal(reqBody, &osrmResp)
 
 		if err != nil || osrmResp.Code != responseCodeOK {
-			response.Body = "Cannot UNMARSHAL the response Body from OSRM or Code Response is not Ok"
-			response.Code = http.StatusBadRequest
-			log.Println("osrmURL: ", osrmURL)
-			log.Println("Error: ", err)
-
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(response)
+			utils.WriteErrorResponse("Cannot UNMARSHAL the response Body from OSRM or Code Response is not Ok", w)
 			return
 		}
 
