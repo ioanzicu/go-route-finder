@@ -304,37 +304,46 @@ func getRoutes(w http.ResponseWriter, r *http.Request) {
 	destinationString := strings.Join(dstParams, ";")
 	log.Println("destination:", destinationString)
 
-	// w.WriteHeader(http.StatusOK)
-	// json.NewEncoder(w).Encode(routeRequest)
+	routes := []Route{}
 
 	// Send request
-	osrmURL := fmt.Sprintf("http://router.project-osrm.org/route/v1/driving/%s;%s?overview=false", sourceString, destinationString)
+	for _, dst := range dstParams {
+		osrmURL := fmt.Sprintf("http://router.project-osrm.org/route/v1/driving/%s;%s?overview=false", sourceString, dst)
 
-	reqBody, err := doHTTPRequest(osrmURL, w)
-	if err != nil {
-		return
+		reqBody, err := doHTTPRequest(osrmURL, w)
+		if err != nil {
+			return
+		}
+
+		osrmResp := OSRMResponse{}
+		err = json.Unmarshal(reqBody, &osrmResp)
+
+		if err != nil || osrmResp.Code != responseCodeOK {
+			response.Body = "Cannot UNMARSHAL the response Body from OSRM or Code Response is not Ok"
+			response.Code = http.StatusBadRequest
+			log.Println("osrmURL: ", osrmURL)
+			log.Println("Error: ", err)
+
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(response)
+			return
+		}
+
+		log.Printf("%v", osrmResp.Routes[0])
+		routes = append(routes, Route{
+			Destination: dst,
+			Duration:    osrmResp.Routes[0].Duration,
+			Distance:    osrmResp.Routes[0].Distance,
+		})
 	}
 
-	log.Println("Response Body")
-	// log.Println(string(body))
-
-	osrmResp := OSRMResponse{}
-	err = json.Unmarshal(reqBody, &osrmResp)
-
-	if err != nil || osrmResp.Code != responseCodeOK {
-		response.Body = "Cannot UNMARSHAL the response Body from OSRM or Code Response is not Ok"
-		response.Code = http.StatusBadRequest
-		log.Println("osrmURL: ", osrmURL)
-		log.Println("Error: ", err)
-
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(response)
-		return
+	outResp := OutputResponse{
+		Source: sourceString,
+		Routes: routes,
 	}
 
-	//  Ouput the umarshaled json
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(osrmResp)
+	json.NewEncoder(w).Encode(outResp)
 }
 
 func main() {
