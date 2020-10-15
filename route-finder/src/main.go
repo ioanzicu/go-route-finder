@@ -67,6 +67,7 @@ func getRoutes(w http.ResponseWriter, r *http.Request) {
 	// Query()["tags"] will return a []string
 	queryParameters := r.URL.Query()
 
+	// Get each parameters value as a []string
 	srcParams, srcOK := queryParameters["src"]
 	dstParams, dstOK := queryParameters["dst"]
 
@@ -113,6 +114,7 @@ func getRoutes(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Source
 	srcParamsString := strings.Join(srcParams, ", ")
 	response.Body = "Request Params: " + srcParamsString
 
@@ -130,6 +132,7 @@ func getRoutes(w http.ResponseWriter, r *http.Request) {
 		srcLatitude = lat
 		log.Println("Lat: ", lat)
 	} else {
+		response.Code = http.StatusBadRequest
 		response.Body = "Malformated param type (float64)"
 
 		w.WriteHeader(http.StatusBadRequest)
@@ -144,6 +147,7 @@ func getRoutes(w http.ResponseWriter, r *http.Request) {
 
 		log.Println("Long: ", lon)
 	} else {
+		response.Code = http.StatusBadRequest
 		response.Body = "Malformated param type (float64)"
 
 		w.WriteHeader(http.StatusBadRequest)
@@ -156,8 +160,78 @@ func getRoutes(w http.ResponseWriter, r *http.Request) {
 		Longitude: srcLongitude,
 	}
 
+	// Destination
+
+	dstLatitude := 0.0
+	dstLongitude := 0.0
+
+	var destinationSlice []Destination
+
+	for index, destination := range dstParams {
+		log.Println("Destination: ", index, " ", destination, len(destination))
+
+		arrDestination := strings.Split(destination, ",")
+
+		// Make sure that 'dst' has latitude and longitude provided
+		if len(arrDestination) != 2 {
+			message := "Expect 'dst' to have lattitude and longitude"
+
+			log.Println(message)
+			response.Code = http.StatusBadRequest
+			response.Body = message
+
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(response)
+			return
+		}
+
+		log.Println("Request Params: "+destination, "[]string", arrDestination)
+		log.Println("latitude", arrDestination[0], "longitude", arrDestination[1],
+			(reflect.TypeOf(arrDestination[0])))
+
+		tempSrcLatitude := arrDestination[0]
+		tempSrcLongitude := arrDestination[1]
+
+		if lat, err := strconv.ParseFloat(tempSrcLatitude, 64); err == nil {
+			dstLatitude = lat
+			log.Println("Lat: ", lat)
+		} else {
+			response.Body = "Malformated param type (float64)"
+			response.Code = http.StatusBadRequest
+
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(response)
+			return
+		}
+
+		if long, err := strconv.ParseFloat(tempSrcLongitude, 64); err == nil {
+			dstLongitude = long
+
+			log.Println("Long: ", long)
+		} else {
+			response.Body = "Malformated param type (float64)"
+			response.Code = http.StatusBadRequest
+
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(response)
+			return
+		}
+
+		tempDst := Destination{
+			Latitude:  dstLatitude,
+			Longitude: dstLongitude,
+		}
+
+		destinationSlice = append(destinationSlice, tempDst)
+	}
+
+	routeRequest := RouteRequest{
+		Source:      source,
+		Destination: destinationSlice,
+	}
+
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(source)
+	json.NewEncoder(w).Encode(routeRequest)
 }
 
 func main() {
