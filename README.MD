@@ -4,7 +4,7 @@ A REST API that takes the input parameters for home address location and destina
 ### Prerequisites:
 - [Golang](https://golang.org/)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop) (if you want to run the application in a docker container)
-- [`jq`(optional)](https://stedolan.github.io/jq/) command for formatted json output
+- [`jq`(optional)](https://stedolan.github.io/jq/) tool for formatted json output
 ## Clone the repository on your computer
 ```bash
 git clone https://github.com/ioanzicu/route-search-go.git
