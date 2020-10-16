@@ -1,10 +1,10 @@
 # Route Finder
-A simple REAST API that takes the input parameters for home address location and destination(s) in format of latitude and longitude. The result is a sorted list of routes in JSON format.
+A REST API that takes the input parameters for home address location and destination(s) in format of latitude and longitude. The result is a sorted list of routes in JSON format.
 
 ### Prerequisites:
 - [Golang](https://golang.org/)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop) (if you want to run the application in a docker container)
-
+- [`jq`(optional)](https://stedolan.github.io/jq/) command for formatted json output
 ## Clone the repository on your computer
 ```bash
 git clone https://github.com/ioanzicu/route-search-go.git
