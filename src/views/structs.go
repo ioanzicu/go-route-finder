@@ -39,8 +39,6 @@ type OSRMResponse struct {
 	Routes    []OSRMRoute              `json:"routes"`
 }
 
-// ---------------
-
 // Route struct
 type Route struct {
 	Destination string  `json:"destination"`
