@@ -12,7 +12,7 @@ git clone https://github.com/ioanzicu/route-search-go.git
 
 ## Install dependencies:
 ```bash
-cd route-finder/src
+cd go-route-finder/src
 go get 
 go build
 ```
