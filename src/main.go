@@ -12,9 +12,9 @@ func main() {
 
 	r := mux.NewRouter()
 
-	r.HandleFunc("/", controller.PrintHello).Methods("GET")
-	r.HandleFunc("/routes", controller.GetRoutes).Methods("GET")
+	r.HandleFunc("/", controller.PrintHello).Methods("GET", "OPTIONS")
+	r.HandleFunc("/routes", controller.GetRoutes).Methods("GET", "OPTIONS")
 
-	log.Println("Serving on Port 3000 ...")
-	log.Fatal(http.ListenAndServe(":3000", r))
+	log.Println("Serving on Port 8080 ...")
+	log.Fatal(http.ListenAndServe(":8080", r))
 }
