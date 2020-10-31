@@ -2,12 +2,13 @@ package utils
 
 import (
 	"encoding/json"
-	views "github.com/route-finder/ioan/routes/views"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"sort"
 	"strconv"
+
+	views "github.com/route-finder/ioan/routes/views"
 )
 
 // DoHTTPRequest perform a GET HTTP request on the given URL
