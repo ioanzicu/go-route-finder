@@ -53,13 +53,13 @@ func GetRoutes(w http.ResponseWriter, r *http.Request) {
 
 	// Accept just the input that consist of 'src' and 'dst' params
 	if (!srcOK || len(srcParams[0]) < 1) || (!dstOK || len(dstParams[0]) < 1) {
-		utils.WriteErrorResponse("Missing required query parameters: src and/or dst", w)
+		utils.WriteErrorResponse(http.StatusBadRequest, "Missing required query parameters: src and/or dst", w)
 		return
 	}
 
 	// Check just for ONE 'src' query param
 	if len(srcParams) > 1 {
-		utils.WriteErrorResponse("Just one `src` param is allowed", w)
+		utils.WriteErrorResponse(http.StatusBadRequest, "Just one `src` param is allowed", w)
 		return
 	}
 
@@ -67,7 +67,7 @@ func GetRoutes(w http.ResponseWriter, r *http.Request) {
 
 	// Make sure that 'src' has latitude and longitude provided
 	if len(srcParams) != 2 {
-		utils.WriteErrorResponse("Expect 'src' to have lattitude and longitude", w)
+		utils.WriteErrorResponse(http.StatusBadRequest, "Expect `src` to have lattitude and longitude", w)
 		return
 	}
 
@@ -98,7 +98,7 @@ func GetRoutes(w http.ResponseWriter, r *http.Request) {
 
 		// Make sure that 'dst' has latitude and longitude provided
 		if len(arrDestination) != 2 {
-			utils.WriteErrorResponse("Expect 'dst' to have lattitude and longitude", w)
+			utils.WriteErrorResponse(http.StatusBadRequest, "Expect 'dst' to have lattitude and longitude", w)
 			return
 		}
 
@@ -139,16 +139,23 @@ func GetRoutes(w http.ResponseWriter, r *http.Request) {
 	for _, dst := range dstParams {
 		osrmURL := fmt.Sprintf("http://router.project-osrm.org/route/v1/driving/%s;%s?overview=false", sourceString, dst)
 
-		reqBody, err := utils.DoHTTPRequest(osrmURL, w)
+		reqBody, statusCode, err := utils.DoHTTPRequest(osrmURL, w)
 		if err != nil {
 			return
+		}
+		// Retry the request if the response code is 500
+		if statusCode == http.StatusInternalServerError {
+			reqBody, statusCode, err = utils.RetryHTTPRequest(osrmURL, w)
+			if err != nil {
+				return
+			}
 		}
 
 		osrmResp := views.OSRMResponse{}
 		err = json.Unmarshal(reqBody, &osrmResp)
 
 		if err != nil || osrmResp.Code != responseCodeOK {
-			utils.WriteErrorResponse("Cannot UNMARSHAL the response Body from OSRM or Code Response is not Ok", w)
+			utils.WriteErrorResponse(statusCode, "Cannot UNMARSHAL the response Body from OSRM or Code Response is not Ok", w)
 			return
 		}
 

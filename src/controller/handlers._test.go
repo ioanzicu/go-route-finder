@@ -33,7 +33,7 @@ func TestGetRoutes(t *testing.T) {
 				"src": "13.38886",
 				"dst": "13.397634,52.529407",
 			},
-			"Expect 'src' to have lattitude and longitude",
+			"Expect `src` to have lattitude and longitude",
 			http.StatusBadRequest,
 		},
 		"malformated `dst` params, no latitude": {
