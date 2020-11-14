@@ -101,4 +101,4 @@ Example Output:
 ```
 
 ## Unit Tests
-In order to run Unit Test navigate to `cd src/controller` and run the command `go test -v`, flag `-v` for verbose output.
+In order to run Unit Test navigate into controller folder `cd src/controller` and run the command `go test -v`, flag `-v` for verbose output.
