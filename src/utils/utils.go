@@ -1,24 +1,29 @@
 package utils
 
 import (
+	"context"
 	"encoding/json"
-	views "github.com/route-finder/ioan/routes/views"
+	"errors"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"sort"
 	"strconv"
+	"time"
+
+	"github.com/lestrrat-go/backoff"
+	views "github.com/route-finder/ioan/routes/views"
 )
 
 // DoHTTPRequest perform a GET HTTP request on the given URL
-func DoHTTPRequest(URL string, w http.ResponseWriter) ([]byte, error) {
+func DoHTTPRequest(URL string, w http.ResponseWriter) ([]byte, int, error) {
 	resp, err := http.Get(URL)
 	if err != nil {
 		log.Println("osrmURL: ", URL)
 		log.Println("Error: ", err)
 
-		WriteErrorResponse("Cannot send request to OSRM", w)
-		return nil, err
+		WriteErrorResponse(resp.StatusCode, "Cannot send request to OSRM", w)
+		return nil, resp.StatusCode, err
 	}
 	defer resp.Body.Close()
 
@@ -27,11 +32,37 @@ func DoHTTPRequest(URL string, w http.ResponseWriter) ([]byte, error) {
 		log.Println("osrmURL: ", URL)
 		log.Println("Error: ", err)
 
-		WriteErrorResponse("Cannot read the response Body from OSRM", w)
-		return nil, err
+		WriteErrorResponse(resp.StatusCode, "Cannot read the response Body from OSRM", w)
+		return nil, resp.StatusCode, err
 	}
 
-	return body, nil
+	return body, resp.StatusCode, nil
+}
+
+// Setup the backoff policy
+var policy = backoff.NewExponential(
+	backoff.WithInterval(500*time.Millisecond), // base interval
+	backoff.WithJitterFactor(0.05),             // 5% jitter
+	backoff.WithMaxRetries(5),                  // If not specified, default number of retries is 10
+)
+
+// RetryHTTPRequest - a backoff algorithm to retry when the 500 Status Code was obtained
+// This ensure that the request will be repeated when the endpoint
+// reporst a Internal Server Error
+// https://github.com/lestrrat-go/backoff
+func RetryHTTPRequest(url string, w http.ResponseWriter) ([]byte, int, error) {
+	background, cancel := policy.Start(context.Background())
+	defer cancel()
+
+	var statusCode = 500
+	for backoff.Continue(background) {
+		resp, statusCode, err := DoHTTPRequest(url, w)
+		if err == nil {
+			return resp, statusCode, nil
+		}
+	}
+
+	return nil, statusCode, errors.New(`Tried very hard, but no luck`)
 }
 
 // SortSlice sort the parameter slice by Duration field
@@ -79,12 +110,12 @@ func ParseToFloat64(strNumber string, w http.ResponseWriter) (float64, error) {
 
 // WriteErrorResponse send to the client a JSON object
 // with the Status Code and Error Message
-func WriteErrorResponse(message string, w http.ResponseWriter) {
+func WriteErrorResponse(statusCode int, message string, w http.ResponseWriter) {
 	response := views.Response{}
 
-	response.Code = http.StatusBadRequest
+	response.Code = statusCode
 	response.Body = message
 
-	w.WriteHeader(http.StatusBadRequest)
+	w.WriteHeader(response.Code)
 	json.NewEncoder(w).Encode(response)
 }
