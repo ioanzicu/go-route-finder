@@ -9,6 +9,34 @@ import (
 	views "github.com/route-finder/ioan/routes/views"
 )
 
+func TestHelloWorld(t *testing.T) {
+	request, _ := http.NewRequest(http.MethodGet, "/", nil)
+	recorder := httptest.NewRecorder()
+
+	PrintHello(recorder, request)
+
+	responseRecorder := recorder.Result()
+
+	var respMessage views.Response
+	err := json.NewDecoder(responseRecorder.Body).Decode(&respMessage)
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+
+	expectedResponse := views.Response{
+		Code: http.StatusOK,
+		Body: "Hello World!",
+	}
+
+	if (respMessage.Body != expectedResponse.Body) && (expectedResponse.Body != "") {
+		t.Errorf("`%v` failed, got %v, expected %v", "TestHelloWorld", responseRecorder.Body, expectedResponse.Body)
+	}
+
+	if responseRecorder.StatusCode != expectedResponse.Code {
+		t.Errorf("`%v` failed, got %v, expected %v", "TestHelloWorld", responseRecorder.StatusCode, expectedResponse.Code)
+	}
+}
+
 func TestGetRoutes(t *testing.T) {
 	testCases := map[string]struct {
 		params     map[string]string
