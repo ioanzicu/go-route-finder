@@ -32,6 +32,9 @@ func PrintHello(w http.ResponseWriter, r *http.Request) {
 // Then, it do a request to the Open Street Maps API
 // Result is reshaped, sorted and send to the user in JSON format
 func GetRoutes(w http.ResponseWriter, r *http.Request) {
+	// Setup Headers Access-Controll in order to allow the client
+	// front end to be able to fetch from this enpoint
+	// Solve CORS issue
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Credentials", "true")
