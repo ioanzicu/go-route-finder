@@ -81,8 +81,8 @@ forget to change it in the `main.go` file too.
 curl -v "localhost:3000/routes?src=13.388860,52.517037&dst=13.397634,52.529407&dst=13.428555,52.523219" | jq
 ```
 
-- `src=13.388860,52.517037`- represents the home address of the customer
-
+- `src=13.388860,52.517037`- represents the home address of the customer.
+    
   **Note**: the `src` parameter should contain the longitude and latitude in the float format. Only one `src` parameter is allowed.
 
 - `dst=13.428555,52.523219` - represents the destination location or pickup point.
@@ -113,5 +113,6 @@ Example Output:
 ```
 
 ## Unit Tests
+In order to run Unit Test navigate into the controller folder `cd src/controller` and 
+run the command `go test -v`, flag `-v` for verbose output.
 
-In order to run Unit Test navigate to `cd src/controller` and run the command `go test -v`, flag `-v` for verbose output.
