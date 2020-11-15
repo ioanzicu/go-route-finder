@@ -61,13 +61,13 @@ sudo docker run -p [host port]:[exposed container port] go-route-finder
 Example:
 
 ```bash
-sudo docker run -p 8080:8080 go-route-finder
+sudo docker run -p 8000:8000 go-route-finder
 ```
 
 To run the container in the detached mode use `-d` flag
 
 ```bash
-sudo docker run -d -p 8080:8080 go-route-finder
+sudo docker run -d -p 8000:8000 go-route-finder
 ```
 
 You can change the exposed container port number, but if you do so, do not
@@ -82,7 +82,7 @@ curl -v "localhost:3000/routes?src=13.388860,52.517037&dst=13.397634,52.529407&d
 ```
 
 - `src=13.388860,52.517037`- represents the home address of the customer.
-    
+
   **Note**: the `src` parameter should contain the longitude and latitude in the float format. Only one `src` parameter is allowed.
 
 - `dst=13.428555,52.523219` - represents the destination location or pickup point.
@@ -113,6 +113,6 @@ Example Output:
 ```
 
 ## Unit Tests
-In order to run Unit Test navigate into the controller folder `cd src/controller` and 
-run the command `go test -v`, flag `-v` for verbose output.
 
+In order to run Unit Test navigate into the controller folder `cd src/controller` and
+run the command `go test -v`, flag `-v` for verbose output.
