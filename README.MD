@@ -1,23 +1,19 @@
 # Route Finder
 
-A REST API that takes the input parameters for home address location and destination(s) in format of latitude and longitude. The result is a sorted list of routes in JSON format.
+A REST API that takes the input parameters for home address location and destination(s) in format of latitude and longitude. The result is a sorted list of routes in JSON format. The route resolution by geographical coordinates is done implemented in the Back End side by consuming the **[Open Source Routing Machine](http://project-osrm.org/)** API.
 
 ### Prerequisites:
 
 - [Golang](https://golang.org/)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop) (if you want to run the application in a docker container)
-- [`jq`(optional)](https://stedolan.github.io/jq/) tool for formatted json output
-
-## Clone the repository on your computer
-
-```bash
-git clone https://github.com/ioanzicu/route-search-go.git
-```
+- [`jq`](https://stedolan.github.io/jq/) tool for formatted json output (optional)
 
 ## Install dependencies:
 
+We use **server** for the folder name of the project.
+
 ```bash
-cd go-route-finder/src
+cd server/src
 go get
 go build
 ```
@@ -55,19 +51,19 @@ sudo docker build -t go-route-finder .
 - **Run the docker container**
 
 ```bash
-sudo docker run -p [host port]:[exposed container port] go-route-finder
+docker run -p [host port]:[exposed container port] go-route-finder
 ```
 
 Example:
 
 ```bash
-sudo docker run -p 8000:8000 go-route-finder
+docker run -p 8000:8000 go-route-finder
 ```
 
 To run the container in the detached mode use `-d` flag
 
 ```bash
-sudo docker run -d -p 8000:8000 go-route-finder
+docker run -d -p 8000:8000 go-route-finder
 ```
 
 You can change the exposed container port number, but if you do so, do not
@@ -78,10 +74,10 @@ forget to change it in the `main.go` file too.
 [`jq`](https://stedolan.github.io/jq/) command for formatted json output
 
 ```bash
-curl -v "localhost:3000/routes?src=13.388860,52.517037&dst=13.397634,52.529407&dst=13.428555,52.523219" | jq
+curl -v "localhost:8000/routes?src=13.388860,52.517037&dst=13.397634,52.529407&dst=13.428555,52.523219" | jq
 ```
 
-- `src=13.388860,52.517037`- represents the home address of the customer.
+- `src=13.388860,52.517037` - represents the home address of the customer.
 
   **Note**: the `src` parameter should contain the longitude and latitude in the float format. Only one `src` parameter is allowed.
 
@@ -90,7 +86,7 @@ curl -v "localhost:3000/routes?src=13.388860,52.517037&dst=13.397634,52.529407&d
   There can be more than one `dst` parameter provided separated by `&` symbol. Example: `dst=13.428555,52.523219&dst=13.342435,54.546675`.
 
 The output will be a json object with fields: `source` and `routes`.
-`routes` field hold a sorted by duration and/or distance list of destinations.
+`routes` field holds a sorted by duration and/or distance list of destinations.
 
 Example Output:
 
@@ -114,5 +110,4 @@ Example Output:
 
 ## Unit Tests
 
-In order to run Unit Test navigate into the controller folder `cd src/controller` and
-run the command `go test -v`, flag `-v` for verbose output.
+In order to run Unit Test navigate to `cd src/controller` and run the command `go test -v`, flag `-v` for verbose output.
