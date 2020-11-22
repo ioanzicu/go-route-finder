@@ -9,14 +9,14 @@ ENV GO111MODULE=on \
 
 LABEL maintainer="Ioan Zîcu <ioan.zicu94@gmail.com>"
 
-WORKDIR /route-finder/src
+WORKDIR /srv/app/route-finder-server/src
 
 COPY go.mod .
 COPY go.sum .
 
 RUN go mod download
 
-COPY . . 
+COPY . .
 
 RUN go build
 
