@@ -1,3 +1,4 @@
+// +heroku install github.com/route-finder/ioan/routes
 module github.com/route-finder/ioan/routes
 
 // +heroku goVersion go1.15

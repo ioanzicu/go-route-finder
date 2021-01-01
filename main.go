@@ -20,7 +20,7 @@ func main() {
 
 	server := &http.Server{
 		Handler: r,
-		Addr:    "127.0.0.1" + GetPort(),
+		Addr:    GetPort(),
 		// Good practice: enforce timeouts for servers you create!
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
