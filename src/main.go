@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	mux "github.com/gorilla/mux"
@@ -18,12 +20,22 @@ func main() {
 
 	server := &http.Server{
 		Handler: r,
-		Addr:    "127.0.0.1:8000",
+		Addr:    "127.0.0.1" + GetPort(),
 		// Good practice: enforce timeouts for servers you create!
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
 
-	log.Println("Serving on Port 8000 ...")
+	log.Println("Serving on Port " + GetPort())
 	log.Fatal(server.ListenAndServe())
+}
+
+// GetPort get the Port from the environment
+func GetPort() string {
+	var port = os.Getenv("PORT")
+	if port == "" {
+		port = "8000"
+		fmt.Println("INFO: No PORT environment variable detected, defaulting to " + port)
+	}
+	return ":" + port
 }
