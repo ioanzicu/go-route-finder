@@ -31,6 +31,7 @@ func main() {
 }
 
 // GetPort get the Port from the environment
+// Default port 8000
 func GetPort() string {
 	var port = os.Getenv("PORT")
 	if port == "" {
