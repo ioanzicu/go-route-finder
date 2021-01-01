@@ -9,7 +9,7 @@ ENV GO111MODULE=on \
 
 LABEL maintainer="Ioan Zîcu <ioan.zicu94@gmail.com>"
 
-WORKDIR /route-finder/src
+WORKDIR /route-finder/
 
 COPY go.mod .
 COPY go.sum .
