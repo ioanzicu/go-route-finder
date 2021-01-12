@@ -14,6 +14,7 @@ import (
 func main() {
 
 	r := mux.NewRouter()
+
 	// Method OPTIONS allow to setup cors in the handler function
 	r.HandleFunc("/", controller.PrintHello).Methods("GET", "OPTIONS")
 	r.HandleFunc("/routes", controller.GetRoutes).Methods("GET", "OPTIONS")
