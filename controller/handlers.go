@@ -18,7 +18,7 @@ func PrintHello(w http.ResponseWriter, r *http.Request) {
 
 	response := views.Response{
 		Code: http.StatusOK,
-		Body: "Hello World!",
+		Body: "Hello World! GitHub + Jenkins",
 	}
 
 	log.Printf("Hello, World!\n")

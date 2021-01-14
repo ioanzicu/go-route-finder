@@ -25,7 +25,7 @@ func TestHelloWorld(t *testing.T) {
 
 	expectedResponse := views.Response{
 		Code: http.StatusOK,
-		Body: "Hello World!",
+		Body: "Hello World! GitHub + Jenkins",
 	}
 
 	if (respMessage.Body != expectedResponse.Body) && (expectedResponse.Body != "") {
